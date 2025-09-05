@@ -5,7 +5,7 @@
 # Default Paths
 #=======================================================================================================================
 
-export DEMIKERNEL_HOME ?= $(HOME)
+export DEMIKERNEL_HOME ?= /home/omar/Programming/demikernel-proxy
 export CONFIG_PATH ?= $(DEMIKERNEL_HOME)/config.yaml
 export PKG_CONFIG_PATH ?= $(shell find $(DEMIKERNEL_HOME)/lib/ -name '*pkgconfig*' -type d 2> /dev/null | xargs | sed -e 's/\s/:/g')
 export LD_LIBRARY_PATH ?= $(DEMIKERNEL_HOME)/lib:$(shell find $(DEMIKERNEL_HOME)/lib/ -name '*x86_64-linux-gnu*' -type d 2> /dev/null | xargs | sed -e 's/\s/:/g')

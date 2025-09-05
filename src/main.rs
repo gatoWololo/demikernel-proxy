@@ -85,13 +85,13 @@ impl TcpProxy {
         };
 
         // Instantiate LibOS for handling incoming flows.
-        let mut catnap: LibOS = match LibOS::new(libos_name) {
+        let mut catnap: LibOS = match LibOS::new(libos_name, None) {
             Ok(libos) => libos,
             Err(e) => anyhow::bail!("failed to initialize libos (error={:?})", e),
         };
 
         // Instantiate LibOS for handling outgoing flows.
-        let catloop: LibOS = match LibOS::new(LibOSName::Catloop) {
+        let catloop: LibOS = match LibOS::new(LibOSName::Catloop, None) {
             Ok(libos) => libos,
             Err(e) => anyhow::bail!("failed to initialize libos (error={:?})", e),
         };
@@ -150,7 +150,7 @@ impl TcpProxy {
                     demi_opcode_t::DEMI_OPC_FAILED => {
                         // Check if this is an unrecoverable error.
                         if qr.qr_ret != libc::ECONNRESET as i64 {
-                            anyhow::bail!("operation failed")
+                            anyhow::bail!("Polling incoming flows. operation failed: {:?}", qr.qr_ret);
                         }
                         println!("WARN: client reset connection");
                         let catnap_qd: QDesc = qr.qr_qd.into();
@@ -176,7 +176,7 @@ impl TcpProxy {
                     demi_opcode_t::DEMI_OPC_FAILED => {
                         // Check if this is an unrecoverable error.
                         if qr.qr_ret != libc::ECONNRESET as i64 {
-                            anyhow::bail!("operation failed")
+                            anyhow::bail!("Polling outgoing flows. operation failed: {:?}", qr.qr_ret);
                         }
                         println!("WARN: server reset connection");
                         let catloop_socket: QDesc = qr.qr_qd.into();
@@ -513,7 +513,7 @@ impl TcpProxy {
                 self.incoming_qds.remove(&catnap_socket).unwrap();
                 self.outgoing_qds_map.remove(&catnap_socket).unwrap();
                 let qts_drained: HashMap<QToken, QDesc> = self.incoming_qts_map.extract_if(|_k, v| v == &catnap_socket).collect();
-                let _: Vec<_> = self.incoming_qts.extract_if(|x| qts_drained.contains_key(x)).collect();
+                let _: Vec<_> = self.incoming_qts.extract_if(.., |x| qts_drained.contains_key(x)).collect();
             },
             Err(e) => println!("ERROR: failed to close socket (error={:?})", e),
         }
@@ -524,7 +524,7 @@ impl TcpProxy {
                 self.outgoing_qds.remove(&catloop_socket).unwrap();
                 self.incoming_qds_map.remove(&catloop_socket).unwrap();
                 let qts_drained: HashMap<QToken, QDesc> = self.outgoing_qts_map.extract_if(|_k, v| v == &catloop_socket).collect();
-                let _: Vec<_> = self.outgoing_qts.extract_if(|x| qts_drained.contains_key(x)).collect();
+                let _: Vec<_> = self.outgoing_qts.extract_if(..,|x| qts_drained.contains_key(x)).collect();
             },
             Err(e) => println!("ERROR: failed to close socket (error={:?})", e),
         }
